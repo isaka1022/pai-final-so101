@@ -1,0 +1,48 @@
+<mujoco model="PAI_Final_Scene">
+  <include file="so101_new_calib.xml"/>
+
+  <option timestep=".002" noslip_iterations="5" noslip_tolerance="0"/>
+  <statistic center="0.3 0 0.3" extent=".6"/>
+  <visual>
+    <headlight diffuse=".4 .4 .4" ambient=".5 .5 .5"/>
+    <global offheight="480" offwidth="640"/>
+    <quality offsamples="8"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".45 .45 .42" rgb2=".55 .55 .52"/>
+    <material name="grid" texture="grid" texrepeat="2 2" texuniform="true" reflectance="0"/>
+  </asset>
+
+  <worldbody>
+    <camera name="front" pos="0.8 0.0 0.5" quat="0.5963678 0.3799282 0.3799282 0.5963678" fovy="45"/>
+    <camera name="top" pos="0.21 0 0.6" xyaxes="0 -1 0 1 0 0" fovy="45"/>
+    <light pos="0 0 3" dir="0 0 -1" diffuse="1 1 1" specular=".3 .3 .3"/>
+    <geom name="floor" size="3 3 0.01" type="plane" material="grid"/>
+
+    <geom name="place_yellow" type="box" size=".03 .03 .001" pos="0.27 -0.08 0.001" rgba="1 .9 0 1" contype="0" conaffinity="0"/>
+    <geom name="place_cyan" type="box" size=".03 .03 .001" pos="0.27 0 0.001" rgba="0 .9 .9 1" contype="0" conaffinity="0"/>
+    <geom name="place_black" type="box" size=".03 .03 .001" pos="0.27 0.08 0.001" rgba=".05 .05 .05 1" contype="0" conaffinity="0"/>
+
+    <body name="cube_red" pos="0.18 -0.08 .02">
+      <freejoint name="cube_red"/>
+      <geom name="cube_red" type="box" size=".02 .02 .02" mass="0.1" rgba="1 0 0 1"/>
+    </body>
+    <body name="cube_green" pos="0.18 0 .02">
+      <freejoint name="cube_green"/>
+      <geom name="cube_green" type="box" size=".02 .02 .02" mass="0.1" rgba="0 .8 0 1"/>
+    </body>
+    <body name="cube_blue" pos="0.18 0.08 .02">
+      <freejoint name="cube_blue"/>
+      <geom name="cube_blue" type="box" size=".02 .02 .02" mass="0.1" rgba="0 0 1 1"/>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <framepos name="so101/ee_pos" objtype="site" objname="gripperframe"/>
+    <framequat name="so101/ee_quat" objtype="site" objname="gripperframe"/>
+    <framelinvel name="so101/ee_vel" objtype="site" objname="gripperframe"/>
+    <frameangvel name="so101/ee_angvel" objtype="site" objname="gripperframe"/>
+  </sensor>
+</mujoco>

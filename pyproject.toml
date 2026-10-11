@@ -1,0 +1,29 @@
+[project]
+name = "pai_final"
+version = "0.1.0"
+description = "Multi-cube pick-and-place scene for the SO-101 simulator"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "lerobot_env_so101>=0.4.0",
+    "mujoco>=3.0.0,<4.0.0",
+    "numpy>=1.24.0",
+    "pillow>=10.0.0",
+    "imageio[ffmpeg]>=2.30.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.1.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["pai_final"]
+
+[tool.setuptools.package-data]
+pai_final = ["scene.xml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
