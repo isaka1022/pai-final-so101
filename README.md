@@ -27,6 +27,12 @@ export GOOGLE_API_KEY=...   # 値はリポジトリに置かない
 
 流れ: 腕を横へ退避 → 俯瞰画像を VLM（`gemini-robotics-er-2-preview`）に渡し pick / place の 2 点を取得 → 高さが既知の水平面（pick はキューブ上面、place は置き場の表面）との交点で世界座標へ変換 → ホームへ復帰 → `pick_and_place`。`--out` と同名の `.json` に指示文・VLM の生応答・2 点・結果を保存し、`--replay` はその指示文と生応答だけで同じ実行をやり直す。
 
+複数の記録を指示文つきの 1 本に連結する（各本の前に指示カード、下に指示文と速度表記の帯。CJK フォントが要る。既定候補が無ければ `--font` で指定）:
+
+```bash
+.venv/bin/python scripts/make_video.py out/a.json out/b.json --out out/submission.mp4 [--font <path>]
+```
+
 ## 検証
 
 ```bash
