@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 import mujoco
 import numpy as np
@@ -30,6 +31,8 @@ PLACE_OPEN_FRACTION = 0.5
 
 # Shoulder pan that swings the arm sideways past the workspace edge for an unobstructed view.
 PARK_PAN = 1.8
+PARK_MOVE_STEPS = 20
+PARK_SETTLE_STEPS = 10
 
 RENDER_HEIGHT = 480
 RENDER_WIDTH = 640
@@ -117,18 +120,34 @@ class PickPlaceSceneEnv(SO101GymEnv):
             and speed < PLACE_MAX_CUBE_SPEED
         )
 
-    def render(self, camera: str = "front", park: bool = False) -> np.ndarray:
-        """Render ``camera``. With ``park`` the arm is swung aside for this frame only."""
+    def render(self, camera: str = "front") -> np.ndarray:
         if self._viewer is None:
             self._viewer = mujoco.Renderer(self._model, self._render_specs.height, self._render_specs.width)
-        pan_adr = self._model.joint("shoulder_pan").qposadr[0]
-        saved_pan = self._data.qpos[pan_adr]
-        if park:
-            self._data.qpos[pan_adr] = PARK_PAN
-            mujoco.mj_kinematics(self._model, self._data)
         self._viewer.update_scene(self._data, camera=camera)
-        frame = self._viewer.render()
-        if park:
-            self._data.qpos[pan_adr] = saved_pan
-            mujoco.mj_kinematics(self._model, self._data)
-        return frame
+        return self._viewer.render()
+
+    def park(self, on_step: Callable[[], None] | None = None) -> None:
+        """Swing the arm sideways out of the top camera's view, simulating the motion."""
+        target = self._home_position.copy()
+        target[self._arm_joint_index("shoulder_pan")] = PARK_PAN
+        self._move_arm(target, on_step)
+
+    def unpark(self, on_step: Callable[[], None] | None = None) -> None:
+        """Bring the arm back to the home pose and resynchronise the IK target."""
+        self._move_arm(self._home_position, on_step)
+        self._target_ee_pos = self.ik_point_pos
+        self._last_action_was_zero = False
+
+    def _arm_joint_index(self, name: str) -> int:
+        return int(np.nonzero(self._arm_dof_ids == self._model.joint(name).id)[0][0])
+
+    def _move_arm(self, target_q: np.ndarray, on_step: Callable[[], None] | None) -> None:
+        """Interpolate the arm actuator targets to ``target_q`` in joint space, then hold while it settles."""
+        start = self._data.ctrl[self._arm_ctrl_ids].copy()
+        for i in range(PARK_MOVE_STEPS + PARK_SETTLE_STEPS):
+            fraction = min(1.0, (i + 1) / PARK_MOVE_STEPS)
+            self._data.ctrl[self._arm_ctrl_ids] = start + fraction * (target_q - start)
+            for _ in range(self._n_substeps):
+                mujoco.mj_step(self._model, self._data)
+            if on_step is not None:
+                on_step()

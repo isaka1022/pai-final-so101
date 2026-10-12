@@ -23,7 +23,8 @@ def env():
 
 
 def test_colour_centroid_matches_cube_position(env):
-    frame = env.render("top", park=True).astype(int)
+    env.park()
+    frame = env.render("top").astype(int)
     r, g, b = frame[..., 0], frame[..., 1], frame[..., 2]
     for name, rule in CUBE_RGB_RULES.items():
         rows, cols = np.nonzero(rule(r, g, b))

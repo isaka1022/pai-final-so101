@@ -25,3 +25,11 @@ def test_teleported_cube_is_not_success(env):
         env.step(zero_action)
     assert env.place_error("cube_red", "place_cyan") < 0.01
     assert not env.is_placed("cube_red", "place_cyan")
+
+
+def test_park_and_unpark_leave_cubes_in_place(env):
+    before = {n: env.cube_pos(n) for n in env.cube_names}
+    env.park()
+    env.unpark()
+    for name, pos in before.items():
+        assert np.linalg.norm(env.cube_pos(name) - pos) < 0.001
