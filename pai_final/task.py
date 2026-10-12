@@ -74,6 +74,8 @@ def run_episode(
         env.unpark(record)
         result = pick_and_place(env, cube, place_xy, on_step=lambda _phase: record())
         record()
+        env.park(record)
+        frames.extend([env.render(OBSERVE_CAMERA)] * (OVERVIEW_SECONDS * FPS))
         imageio.mimsave(out_video, frames, fps=FPS, macro_block_size=1)
         final_cube_xy = {name: env.cube_pos(name)[:2].tolist() for name in env.cube_names}
     finally:
