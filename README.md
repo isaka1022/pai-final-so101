@@ -1,7 +1,7 @@
 # pai-final-so101
 
 SO-101 アームによる言語指示つき pick-and-place の最終課題用リポジトリ。
-現時点では、VLM を使わずに世界座標を直接渡して pick-and-place が通るシーンと環境までを含む。
+シーンと環境、VLM プランナ（`pai_final.planner`）、実行スクリプト `run.py` を含む。
 
 - シーン: 赤・緑・青の 4 cm キューブ 3 個、色つきの置き場 3 個（黄・シアン・黒）、俯瞰カメラ `top` と正面カメラ `front`
 - 環境: `pai_final.env.PickPlaceSceneEnv`（`SO101GymEnv` 継承）
@@ -16,6 +16,16 @@ SO-101 アームによる言語指示つき pick-and-place の最終課題用リ
 uv venv
 uv pip install -e ".[test]"
 ```
+
+## 実行
+
+```bash
+export GOOGLE_API_KEY=...   # 値はリポジトリに置かない
+.venv/bin/python run.py --instruction "put the red cube on the cyan square" --out out/red_to_cyan.mp4
+.venv/bin/python run.py --replay out/red_to_cyan.json --out out/replayed.mp4   # キー・SDK 不要
+```
+
+流れ: 腕を横へ退避 → 俯瞰画像を VLM（`gemini-robotics-er-2-preview`）に渡し pick / place の 2 点を取得 → 高さが既知の水平面（pick はキューブ上面、place は置き場の表面）との交点で世界座標へ変換 → ホームへ復帰 → `pick_and_place`。`--out` と同名の `.json` に指示文・VLM の生応答・2 点・結果を保存し、`--replay` はその指示文と生応答だけで同じ実行をやり直す。
 
 ## 検証
 
