@@ -14,9 +14,7 @@ SO-101 アームによる言語指示つき pick-and-place の最終課題用リ
 
 ```bash
 uv venv
-uv pip install -e <lerobot_env_so101 のソースディレクトリ>   # 0.4.0 が PyPI に出るまで
-uv pip install --no-deps -e .
-uv pip install pillow "imageio[ffmpeg]" pytest
+uv pip install -e ".[test]"
 ```
 
 ## 検証
