@@ -68,9 +68,9 @@ def save_checkpoint(path: Path, model: GraspNet, joint_mean, joint_std, train_ar
         {
             "state_dict": model.state_dict(),
             "config": asdict(model.config),
-            "joint_mean": np.asarray(joint_mean, dtype=np.float32),
-            "joint_std": np.asarray(joint_std, dtype=np.float32),
-            "train_args": train_args,
+            "joint_mean": torch.as_tensor(np.asarray(joint_mean, dtype=np.float32)),
+            "joint_std": torch.as_tensor(np.asarray(joint_std, dtype=np.float32)),
+            "train_args": {k: str(v) if isinstance(v, Path) else v for k, v in train_args.items()},
         },
         path,
     )
@@ -80,15 +80,15 @@ class LearnedPolicy:
     """Closed-loop policy from a checkpoint: ``(image, joints) -> action``, next action."""
 
     def __init__(self, path: Path, device: torch.device):
-        ckpt = torch.load(path, map_location="cpu", weights_only=False)
+        ckpt = torch.load(path, map_location="cpu", weights_only=True)
         self.config = NetConfig(**ckpt["config"])
         self.model = GraspNet(self.config)
         self.model(torch.zeros(1, 3, self.config.image_size, self.config.image_size), torch.zeros(1, JOINT_DIM))
         self.model.load_state_dict(ckpt["state_dict"])
         self.model.to(device).eval()
         self.device = device
-        self.joint_mean = ckpt["joint_mean"]
-        self.joint_std = ckpt["joint_std"]
+        self.joint_mean = ckpt["joint_mean"].numpy()
+        self.joint_std = ckpt["joint_std"].numpy()
         self.train_args = ckpt["train_args"]
 
     @torch.no_grad()

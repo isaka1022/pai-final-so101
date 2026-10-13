@@ -104,7 +104,7 @@ def main() -> int:
             val_loss = weighted_mse(model(*batch_inputs(val_idx, False)), val_idx).item()
         print(f"epoch {epoch + 1:3d}/{args.epochs}  train {total / len(order):.5f}  val {val_loss:.5f}", flush=True)
 
-    save_checkpoint(args.out, model, joint_mean, joint_std, {**vars(args), "demos": str(args.demos), "val_episodes": val_episodes.tolist()})
+    save_checkpoint(args.out, model, joint_mean, joint_std, {**vars(args), "val_episodes": val_episodes.tolist()})
     print(f"saved {args.out} on {device}; {len(train_idx)} train / {len(val_idx)} val steps; {time.time() - started:.0f}s")
     return 0
 
