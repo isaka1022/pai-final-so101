@@ -33,6 +33,20 @@ export GOOGLE_API_KEY=...   # 値はリポジトリに置かない
 .venv/bin/python scripts/make_video.py out/a.json out/b.json --out out/submission.mp4 [--font <path>]
 ```
 
+## 学習ポリシーによる把持（手先カメラ）
+
+「VLM の点 → 上空へ移動 → 学習ポリシーで把持と持ち上げ → 置き場へ運搬」を 1 本で実行する経路。ポリシーの入力は手先カメラ画像（96×96）と関節角 6 個のみで、把持から設置まで `env.cube_pos` を読まない（成功判定だけが読む）。
+
+```bash
+uv pip install -e ".[learned]"                                                # torch
+.venv/bin/python scripts/collect_grasp_demos.py --episodes 300 --seed 0       # 約 2 分（out/learned/demos.npz）
+.venv/bin/python scripts/train_grasp_bc.py --epochs 30                        # 約 100 秒（MPS）、out/learned/policy.pt
+.venv/bin/python scripts/eval_grasp_policy.py --episodes 50 --seed 10000      # 約 15 秒、成功数/試行数
+.venv/bin/python run.py --replay out/red_to_cyan.json --policy out/learned/policy.pt --out out/learned_red_to_cyan.mp4
+```
+
+`--policy` なしの実行は従来のスクリプト把持のまま。`train_grasp_bc.py --no-image` は関節角だけの比較用ポリシーを学習する。
+
 ## 検証
 
 ```bash

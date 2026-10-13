@@ -12,7 +12,8 @@ from PIL import Image, ImageDraw
 from pai_final.env import CUBE_HALF_SIZE, PickPlaceSceneEnv
 from pai_final.planner import MODEL_ID, NORMALISED_RANGE, ask_vlm, parse_points
 from pai_final.projection import pixel_to_world_xy
-from pai_final.skill import pick_and_place
+from pai_final.learned import IMAGE_SIZE
+from pai_final.skill import pick_and_place, pick_and_place_learned
 
 SEED = 0
 OBSERVE_CAMERA = "top"
@@ -23,6 +24,7 @@ OVERVIEW_SECONDS = 2
 PICK_PLANE_Z = 2 * CUBE_HALF_SIZE
 PLACE_PLANE_Z = 0.002
 MARKER_RADIUS = 7
+INSET_SCALE = 2
 PICK_COLOUR = (255, 0, 255)
 PLACE_COLOUR = (255, 140, 0)
 
@@ -39,15 +41,26 @@ def annotate(frame: np.ndarray, pick_yx, place_yx) -> np.ndarray:
     return np.asarray(image)
 
 
+def with_wrist_inset(frame: np.ndarray, wrist: np.ndarray) -> np.ndarray:
+    """Copy of ``frame`` with the (enlarged) wrist image in its top-right corner."""
+    inset = wrist.repeat(INSET_SCALE, axis=0).repeat(INSET_SCALE, axis=1)
+    out = frame.copy()
+    out[: inset.shape[0], -inset.shape[1] :] = inset
+    return out
+
+
 def run_episode(
     instruction: str,
     out_video: Path,
     raw_response: str | None = None,
     ask: Callable[[str, str], str] = ask_vlm,
+    policy: Path | None = None,
 ) -> dict:
     """Run one episode and write ``out_video``, its observation PNG and a ``.json`` record beside it.
 
     With ``raw_response`` the VLM is not called and that answer is used instead.
+    With ``policy`` (a checkpoint) the grasp and lift are done by the learned wrist-camera policy,
+    and the video carries its camera view in a corner.
     """
     out_video.parent.mkdir(parents=True, exist_ok=True)
     env = PickPlaceSceneEnv()
@@ -72,7 +85,15 @@ def run_episode(
         overview = annotate(top, pick_yx, place_yx)
         frames.extend([overview] * (OVERVIEW_SECONDS * FPS))
         env.unpark(record)
-        result = pick_and_place(env, cube, place_xy, on_step=lambda _phase: record())
+        if policy is None:
+            result = pick_and_place(env, cube, place_xy, on_step=lambda _phase: record())
+        else:
+            from pai_final.grasp_net import LearnedPolicy, pick_device  # torch only when a policy is given
+
+            record_inset = lambda: frames.append(  # noqa: E731
+                with_wrist_inset(env.render(RECORD_CAMERA), env.render("wrist", IMAGE_SIZE))
+            )
+            result = pick_and_place_learned(env, pick_xy, place_xy, LearnedPolicy(policy, pick_device()), record_inset)
         record()
         env.park(record)
         frames.extend([env.render(OBSERVE_CAMERA)] * (OVERVIEW_SECONDS * FPS))
@@ -95,5 +116,7 @@ def run_episode(
         "result": asdict(result),
         "final_cube_xy": final_cube_xy,
     }
+    if policy is not None:
+        record_data["policy"] = str(policy)
     out_video.with_suffix(".json").write_text(json.dumps(record_data, indent=2, ensure_ascii=False) + "\n")
     return record_data

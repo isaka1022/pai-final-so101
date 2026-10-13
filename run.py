@@ -13,6 +13,7 @@ def main() -> int:
     source.add_argument("--instruction", help="instruction sent to the VLM (needs GOOGLE_API_KEY)")
     source.add_argument("--replay", type=Path, help="JSON saved by an earlier run; the VLM is not called")
     parser.add_argument("--out", type=Path, help="output mp4 (default: out/run.mp4, or out/replayed.mp4 with --replay)")
+    parser.add_argument("--policy", type=Path, help="learned grasp checkpoint (needs torch); default is the scripted grasp")
     args = parser.parse_args()
 
     if args.replay:
@@ -23,7 +24,7 @@ def main() -> int:
         instruction, raw_response = args.instruction, None
         out = args.out or Path("out/run.mp4")
 
-    record = run_episode(instruction, out, raw_response)
+    record = run_episode(instruction, out, raw_response, policy=args.policy)
     result = record["result"]
     print(f"{result['cube']} -> {result['place']}: success={result['success']} error={result['error_m'] * 1000:.1f} mm steps={result['steps']}")
     return 0 if result["success"] else 1
