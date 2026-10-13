@@ -20,6 +20,8 @@ DEFAULT_DEMOS = Path("out/learned/demos.npz")
 DEFAULT_OUT = Path("out/learned/policy.pt")
 VAL_FRACTION = 0.1
 SHIFT_PIXELS = 4
+CLOSING_JAW_RANGE = (0.5, 1.65)
+CLOSING_WEIGHT = 5.0
 
 
 def random_shift(images: torch.Tensor) -> torch.Tensor:
@@ -59,6 +61,13 @@ def main() -> int:
     images_t = torch.as_tensor(data["images"], device=device) if config.use_image else None
     joints_t = torch.as_tensor((joints - joint_mean) / joint_std, device=device).float()
     targets_t = torch.as_tensor(data["actions"], device=device)
+    jaw = joints[:, -1]
+    in_closing = (jaw > CLOSING_JAW_RANGE[0]) & (jaw < CLOSING_JAW_RANGE[1])
+    weights_t = torch.as_tensor(np.where(in_closing, CLOSING_WEIGHT, 1.0).astype(np.float32), device=device)
+
+    def weighted_mse(pred: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:
+        return ((pred - targets_t[idx]).square().mean(dim=1) * weights_t[idx]).sum() / weights_t[idx].sum()
+
     train_idx = np.nonzero(~is_val)[0]
     val_idx = torch.as_tensor(np.nonzero(is_val)[0], device=device)
 
@@ -84,7 +93,7 @@ def main() -> int:
         total = 0.0
         for i in range(0, len(order), args.batch_size):
             idx = order[i : i + args.batch_size]
-            loss = F.mse_loss(model(*batch_inputs(idx, True)), targets_t[idx])
+            loss = weighted_mse(model(*batch_inputs(idx, True)), idx)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -92,7 +101,7 @@ def main() -> int:
         scheduler.step()
         model.eval()
         with torch.no_grad():
-            val_loss = F.mse_loss(model(*batch_inputs(val_idx, False)), targets_t[val_idx]).item()
+            val_loss = weighted_mse(model(*batch_inputs(val_idx, False)), val_idx).item()
         print(f"epoch {epoch + 1:3d}/{args.epochs}  train {total / len(order):.5f}  val {val_loss:.5f}", flush=True)
 
     save_checkpoint(args.out, model, joint_mean, joint_std, {**vars(args), "demos": str(args.demos), "val_episodes": val_episodes.tolist()})
