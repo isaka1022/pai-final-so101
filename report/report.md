@@ -84,7 +84,7 @@ VLM が返すのは画像上の点（`[y, x]`、0〜1000 に正規化）で、�
 
 ## 7. 工夫点4: API キー無しで同じ動画を再現できる
 
-VLM の応答は呼ぶたびに変わりうるし、採点者が API キーを持っているとは限らない。`run.py` は、指示文と VLM の生の応答を JSON に保存する。`--replay` にその JSON を渡すと、VLM を呼ばずに同じ実行をやり直す。
+VLM の応答は呼ぶたびに変わりうるし、採点者が API キーを持っているとは限らない。`run.py` は、指示文と VLM の生の応答を JSON に保存する。`--replay` にその JSON を渡すと、VLM を呼ばずに同じ実行をやり直す。実際の応答 4 本を `records/` に同梱した。
 
 VLM の応答はそのまま信用せず、`pick` と `place` が1つずつあること、点が2要素で 0〜1000 に収まることを確かめてから使う。満たさなければ実行せずに止める。
 
@@ -135,7 +135,7 @@ python scripts/eval_grasp_policy.py --policy out/learned/policy_noimage.pt --epi
 export GOOGLE_API_KEY=...
 python run.py --instruction "put the red cube on the cyan square" --out out/red_to_cyan.mp4
 python run.py --instruction "青いキューブを黄色い枠に置いて" --out out/blue_to_yellow.mp4
-python run.py --replay out/red_to_cyan.json        # キー無しで再現
+python run.py --replay records/red_to_cyan.json    # キー無しで再現
 ```
 
 保存した JSON から再生した動画は、VLM を呼んだときの動画と全フレームが一致した（188 フレームと 191 フレーム）。
@@ -148,9 +148,11 @@ python run.py --replay out/red_to_cyan.json        # キー無しで再現
 | `青いキューブを黄色い枠に置いて` | 青 → 黄 | 5.8 mm |
 
 ```bash
-python run.py --replay out/red_to_cyan.json --policy out/learned/policy.pt --out out/learned_red_to_cyan.mp4
-python run.py --replay out/blue_to_yellow.json --policy out/learned/policy.pt --out out/learned_blue_to_yellow.mp4
+python run.py --replay records/red_to_cyan.json --policy checkpoints/grasp_policy.pt --out out/learned_red_to_cyan.mp4
+python run.py --replay records/blue_to_yellow.json --policy checkpoints/grasp_policy.pt --out out/learned_blue_to_yellow.mp4
 ```
+
+`checkpoints/grasp_policy.pt` は同梱した学習済みの重みで、収集と学習をやり直さずに上の 2 行を実行できる。
 
 ## 10. 限界と考察
 
@@ -176,5 +178,5 @@ python run.py --replay out/blue_to_yellow.json --policy out/learned/policy.pt --
 
 ## 12. 動画について
 
-- 倍速: `<倍速の有無と倍率>`
-- 構成: `<指示文の表示 → VLM が選んだ点 → pick-and-place → 別の指示でもう1回>`
+- 倍速: なし（等速。各クリップの右下に `1x` と表示）
+- 構成: 指示文のカード → 実行、を 5 回。前の 4 本はスクリプトによる把持（英語、日本語、色を言わない指示 2 本）。最後の 1 本は 1 本目と同じ指示を、手先カメラの学習ポリシーで把持したもの（右上に手先カメラの映像）
