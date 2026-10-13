@@ -5,3 +5,5 @@ __pycache__/
 out/
 .env
 build/
+.venv-real/
+real/config.env
