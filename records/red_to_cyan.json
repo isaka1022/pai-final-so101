@@ -1,0 +1,48 @@
+{
+  "instruction": "put the red cube on the cyan square",
+  "model": "gemini-robotics-er-2-preview",
+  "raw_response": "```json\n[\n  {\"point\": [564, 626], \"label\": \"pick\"},\n  {\"point\": [380, 500], \"label\": \"place\"}\n]\n```",
+  "pick_yx": [
+    564.0,
+    626.0
+  ],
+  "place_yx": [
+    380.0,
+    500.0
+  ],
+  "camera": "top",
+  "image_size": {
+    "height": 480,
+    "width": 640
+  },
+  "seed": 0,
+  "pick_world_xy": [
+    0.1803091718490966,
+    -0.07793842389612154
+  ],
+  "place_world_xy": [
+    0.2694479304717866,
+    1.3200092235218587e-17
+  ],
+  "result": {
+    "cube": "cube_red",
+    "place": "place_cyan",
+    "success": true,
+    "error_m": 0.0020360004648182915,
+    "steps": 56
+  },
+  "final_cube_xy": {
+    "cube_red": [
+      0.2692467154092285,
+      0.001891523253371877
+    ],
+    "cube_green": [
+      0.18,
+      1.9407253581958818e-17
+    ],
+    "cube_blue": [
+      0.18,
+      0.08
+    ]
+  }
+}

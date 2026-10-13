@@ -22,10 +22,12 @@ uv pip install -e ".[test]"
 ```bash
 export GOOGLE_API_KEY=...   # 値はリポジトリに置かない
 .venv/bin/python run.py --instruction "put the red cube on the cyan square" --out out/red_to_cyan.mp4
-.venv/bin/python run.py --replay out/red_to_cyan.json --out out/replayed.mp4   # キー・SDK 不要
+.venv/bin/python run.py --replay records/red_to_cyan.json --out out/replayed.mp4   # キー・SDK 不要
 ```
 
 流れ: 腕を横へ退避 → 俯瞰画像を VLM（`gemini-robotics-er-2-preview`）に渡し pick / place の 2 点を取得 → 高さが既知の水平面（pick はキューブ上面、place は置き場の表面）との交点で世界座標へ変換 → ホームへ復帰 → `pick_and_place`。`--out` と同名の `.json` に指示文・VLM の生応答・2 点・結果を保存し、`--replay` はその指示文と生応答だけで同じ実行をやり直す。
+
+`records/` に実 API の応答 4 本（`red_to_cyan` `blue_to_yellow` `grass_to_banana` `stop_to_darkest`）を同梱している。
 
 複数の記録を指示文つきの 1 本に連結する（各本の前に指示カード、下に指示文と速度表記の帯。CJK フォントが要る。既定候補が無ければ `--font` で指定）:
 
@@ -42,7 +44,13 @@ uv pip install -e ".[learned]"                                                # 
 .venv/bin/python scripts/collect_grasp_demos.py --episodes 300 --seed 0       # 約 2 分（out/learned/demos.npz）
 .venv/bin/python scripts/train_grasp_bc.py --epochs 30                        # 約 100 秒（MPS）、out/learned/policy.pt
 .venv/bin/python scripts/eval_grasp_policy.py --episodes 50 --seed 10000      # 約 15 秒、成功数/試行数
-.venv/bin/python run.py --replay out/red_to_cyan.json --policy out/learned/policy.pt --out out/learned_red_to_cyan.mp4
+.venv/bin/python run.py --replay records/red_to_cyan.json --policy out/learned/policy.pt --out out/learned_red_to_cyan.mp4
+```
+
+学習済みの重みを `checkpoints/grasp_policy.pt` に同梱している。収集と学習を省いて再生だけするなら次の 1 行（API キー不要）。
+
+```bash
+.venv/bin/python run.py --replay records/red_to_cyan.json --policy checkpoints/grasp_policy.pt --out out/learned_red_to_cyan.mp4
 ```
 
 `--policy` なしの実行は従来のスクリプト把持のまま。`train_grasp_bc.py --no-image` は関節角だけの比較用ポリシーを学習する。

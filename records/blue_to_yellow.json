@@ -1,0 +1,48 @@
+{
+  "instruction": "青いキューブを黄色い枠に置いて",
+  "model": "gemini-robotics-er-2-preview",
+  "raw_response": "```json\n[\n  {\"point\": [563, 373], \"label\": \"pick\"},\n  {\"point\": [380, 620], \"label\": \"place\"}\n]\n```",
+  "pick_yx": [
+    563.0,
+    373.0
+  ],
+  "place_yx": [
+    380.0,
+    620.0
+  ],
+  "camera": "top",
+  "image_size": {
+    "height": 480,
+    "width": 640
+  },
+  "seed": 0,
+  "pick_world_xy": [
+    0.18077309103895445,
+    0.07855698281593206
+  ],
+  "place_world_xy": [
+    0.2694479304717866,
+    -0.07926390729571549
+  ],
+  "result": {
+    "cube": "cube_blue",
+    "place": "place_yellow",
+    "success": true,
+    "error_m": 0.003288535683625824,
+    "steps": 59
+  },
+  "final_cube_xy": {
+    "cube_red": [
+      0.18,
+      -0.08
+    ],
+    "cube_green": [
+      0.18,
+      2.009059585361556e-17
+    ],
+    "cube_blue": [
+      0.2690668232567121,
+      -0.07684664494414807
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "instruction": "put the cube that has the colour of grass on the banana-coloured square",
+  "model": "gemini-robotics-er-2-preview",
+  "raw_response": "```json\n[\n  {\"point\": [566, 502], \"label\": \"pick\"},\n  {\"point\": [382, 622], \"label\": \"place\"}\n]\n```",
+  "pick_yx": [
+    566.0,
+    502.0
+  ],
+  "place_yx": [
+    382.0,
+    622.0
+  ],
+  "camera": "top",
+  "image_size": {
+    "height": 480,
+    "width": 640
+  },
+  "seed": 0,
+  "pick_world_xy": [
+    0.17938133346938084,
+    -0.0012371178396209579
+  ],
+  "place_world_xy": [
+    0.26845713163059015,
+    -0.0805849724173107
+  ],
+  "result": {
+    "cube": "cube_green",
+    "place": "place_yellow",
+    "success": true,
+    "error_m": 0.0022827875217550316,
+    "steps": 56
+  },
+  "final_cube_xy": {
+    "cube_red": [
+      0.18,
+      -0.08
+    ],
+    "cube_green": [
+      0.2692412051791185,
+      -0.07784701386690861
+    ],
+    "cube_blue": [
+      0.18,
+      0.08
+    ]
+  }
+}

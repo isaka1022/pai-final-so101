@@ -1,0 +1,48 @@
+{
+  "instruction": "信号の「止まれ」の色のキューブを、いちばん暗い色の枠に置いて",
+  "model": "gemini-robotics-er-2-preview",
+  "raw_response": "```json\n[\n  {\"point\": [568, 625], \"label\": \"pick\"},\n  {\"point\": [380, 380], \"label\": \"place\"}\n]\n```",
+  "pick_yx": [
+    568.0,
+    625.0
+  ],
+  "place_yx": [
+    380.0,
+    380.0
+  ],
+  "camera": "top",
+  "image_size": {
+    "height": 480,
+    "width": 640
+  },
+  "seed": 0,
+  "pick_world_xy": [
+    0.1784534950896651,
+    -0.07731986497631108
+  ],
+  "place_world_xy": [
+    0.2694479304717866,
+    0.07926390729571552
+  ],
+  "result": {
+    "cube": "cube_red",
+    "place": "place_black",
+    "success": true,
+    "error_m": 0.0011576512395338313,
+    "steps": 59
+  },
+  "final_cube_xy": {
+    "cube_red": [
+      0.26989860356643997,
+      0.08115320213130896
+    ],
+    "cube_green": [
+      0.18,
+      1.9847457011223216e-17
+    ],
+    "cube_blue": [
+      0.18,
+      0.08
+    ]
+  }
+}
