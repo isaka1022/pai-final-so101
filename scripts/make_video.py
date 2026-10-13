@@ -18,6 +18,10 @@ CARD_FONT_SIZE = 44
 MARGIN = 16
 BAND_LABEL_WIDTH = 60
 MIN_FONT_SIZE = 12
+CARD_NOTE_FONT_SIZE = 26
+CARD_LINE_GAP = 48
+LEARNED_NOTE = "把持: 手先カメラの学習ポリシー"
+LEARNED_BAND_PREFIX = "[学習] "
 FONT_CANDIDATES = (
     "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
     "/System/Library/Fonts/ヒラギノ角ゴシック W4.ttc",
@@ -57,11 +61,15 @@ def with_band(frame: np.ndarray, text: str, font_path: Path) -> np.ndarray:
     return np.asarray(canvas)
 
 
-def title_card(size: tuple[int, int], text: str, font_path: Path) -> np.ndarray:
+def title_card(size: tuple[int, int], text: str, font_path: Path, note: str = "") -> np.ndarray:
     width, height = size
     canvas = Image.new("RGB", size, BAND_COLOUR)
+    draw = ImageDraw.Draw(canvas)
     font = fit_font(font_path, CARD_FONT_SIZE, text, width - 2 * MARGIN)
-    ImageDraw.Draw(canvas).text((width / 2, height / 2), text, fill=TEXT_COLOUR, font=font, anchor="mm")
+    draw.text((width / 2, height / 2), text, fill=TEXT_COLOUR, font=font, anchor="mm")
+    if note:
+        note_font = fit_font(font_path, CARD_NOTE_FONT_SIZE, note, width - 2 * MARGIN)
+        draw.text((width / 2, height / 2 + CARD_LINE_GAP), note, fill=TEXT_COLOUR, font=note_font, anchor="mm")
     return np.asarray(canvas)
 
 
@@ -77,14 +85,17 @@ def main() -> None:
     frames: list[np.ndarray] = []
     fps = None
     for record_path in args.records:
-        instruction = json.loads(record_path.read_text())["instruction"]
+        record = json.loads(record_path.read_text())
+        instruction = record["instruction"]
+        learned = "policy" in record
+        caption = (LEARNED_BAND_PREFIX if learned else "") + instruction
         reader = imageio.get_reader(record_path.with_suffix(".mp4"))
         fps = fps or reader.get_meta_data()["fps"]
-        clip = [with_band(f, instruction, font_path) for f in reader]
+        clip = [with_band(f, caption, font_path) for f in reader]
         reader.close()
         height, width = clip[0].shape[:2]
         assert height % 2 == 0 and width % 2 == 0, (height, width)
-        frames.extend([title_card((width, height), instruction, font_path)] * round(CARD_SECONDS * fps))
+        frames.extend([title_card((width, height), instruction, font_path, LEARNED_NOTE if learned else "")] * round(CARD_SECONDS * fps))
         frames.extend(clip)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
