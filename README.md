@@ -32,7 +32,7 @@ export GOOGLE_API_KEY=...   # 値はリポジトリに置かない
 複数の記録を指示文つきの 1 本に連結する（各本の前に指示カード、下に指示文と速度表記の帯。CJK フォントが要る。既定候補が無ければ `--font` で指定）:
 
 ```bash
-.venv/bin/python scripts/make_video.py out/a.json out/b.json --out out/submission.mp4 [--font <path>]
+.venv/bin/python scripts/make_video.py out/a.json out/b.json --out out/submission.mp4 [--intro] [--font <path>]   # --intro: 先頭にタイトルと仕組みの図
 ```
 
 ## 学習ポリシーによる把持（手先カメラ）
