@@ -7,7 +7,7 @@ from typing import Callable
 
 import imageio.v2 as imageio
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from pai_final.env import CUBE_HALF_SIZE, PickPlaceSceneEnv
 from pai_final.planner import MODEL_ID, NORMALISED_RANGE, ask_vlm, parse_points
@@ -24,15 +24,28 @@ OVERVIEW_SECONDS = 2
 PICK_PLANE_Z = 2 * CUBE_HALF_SIZE
 PLACE_PLANE_Z = 0.002
 MARKER_RADIUS = 7
-INSET_SCALE = 2
+INSET_SCALE = 3
+LABEL_FONT_SIZE = 18
+LABEL_PAD = 4
+OVERVIEW_LABEL = "top camera: VLM input"
+INSET_LABEL = "wrist camera: policy input"
 PICK_COLOUR = (255, 0, 255)
 PLACE_COLOUR = (255, 140, 0)
+
+
+def draw_label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str) -> None:
+    """White text on a black box whose top-left corner is ``xy``."""
+    font = ImageFont.load_default(LABEL_FONT_SIZE)
+    left, top, right, bottom = draw.textbbox((xy[0] + LABEL_PAD, xy[1] + LABEL_PAD), text, font=font)
+    draw.rectangle([xy[0], xy[1], right + LABEL_PAD, bottom + LABEL_PAD], fill=(0, 0, 0))
+    draw.text((xy[0] + LABEL_PAD, xy[1] + LABEL_PAD), text, fill=(255, 255, 255), font=font)
 
 
 def annotate(frame: np.ndarray, pick_yx, place_yx) -> np.ndarray:
     """Copy of ``frame`` with the pick and place points marked and labelled."""
     image = Image.fromarray(frame)
     draw = ImageDraw.Draw(image)
+    draw_label(draw, (0, 0), OVERVIEW_LABEL)
     height, width = frame.shape[:2]
     for label, (y, x), colour in (("pick", pick_yx, PICK_COLOUR), ("place", place_yx, PLACE_COLOUR)):
         cx, cy = x / NORMALISED_RANGE * width, y / NORMALISED_RANGE * height
@@ -46,7 +59,9 @@ def with_wrist_inset(frame: np.ndarray, wrist: np.ndarray) -> np.ndarray:
     inset = wrist.repeat(INSET_SCALE, axis=0).repeat(INSET_SCALE, axis=1)
     out = frame.copy()
     out[: inset.shape[0], -inset.shape[1] :] = inset
-    return out
+    image = Image.fromarray(out)
+    draw_label(ImageDraw.Draw(image), (frame.shape[1] - inset.shape[1], 0), INSET_LABEL)
+    return np.asarray(image)
 
 
 def run_episode(
