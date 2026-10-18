@@ -1,0 +1,2 @@
+lerobot[feetech,dataset,training,hardware,viz]==0.6.0
+mediapipe==1.1.1

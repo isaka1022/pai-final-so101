@@ -1,0 +1,2 @@
+# mediapipe asks for opencv-contrib-python, which overwrites the cv2 that lerobot pins (opencv-python-headless<4.14)
+opencv-contrib-python; sys_platform == 'never'

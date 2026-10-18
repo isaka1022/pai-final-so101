@@ -55,6 +55,17 @@ uv pip install -e ".[learned]"                                                # 
 
 `--policy` なしの実行は従来のスクリプト把持のまま。`train_grasp_bc.py --no-image` は関節角だけの比較用ポリシーを学習する。
 
+## 実機（SO-101）
+
+実機用は sim 用と別の環境に入れる（lerobot と MediaPipe が OpenCV の別版を要求するため、`real/overrides.txt` で lerobot 側に揃える）。
+
+```bash
+uv venv .venv-real --python 3.12
+uv pip install --python .venv-real/bin/python -r real/requirements.txt --override real/overrides.txt
+real/so101.sh hand-probe            # 手先カメラで手を検出して rerun に表示（アーム不要）
+real/so101.sh ports                 # 以降は real/config.env.example を real/config.env に写して記入
+```
+
 ## 検証
 
 ```bash

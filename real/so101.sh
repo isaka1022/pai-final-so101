@@ -1,6 +1,6 @@
 #!/bin/bash
 # Real SO-101 with a wrist camera: record teleoperated demos, train ACT, run the policy.
-# Usage: real/so101.sh <ports|cameras|calibrate-follower|calibrate-leader|teleop|record|train|rollout>
+# Usage: real/so101.sh <ports|cameras|hand-probe|calibrate-follower|calibrate-leader|teleop|record|train|rollout>
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -15,6 +15,7 @@ STEP="${1:-}"
 case "${STEP}" in
   ports) exec "${BIN}/lerobot-find-port" ;;
   cameras) exec "${BIN}/lerobot-find-cameras" opencv --output-dir out/real/camera_check ;;
+  hand-probe) shift; exec "${BIN}/python" real/hand_probe.py "$@" ;;
 esac
 
 if [ ! -f real/config.env ]; then
