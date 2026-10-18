@@ -1,6 +1,6 @@
 #!/bin/bash
 # Real SO-101 with a wrist camera: record teleoperated demos, train ACT, run the policy.
-# Usage: real/so101.sh <ports|cameras|hand-probe|calibrate-follower|calibrate-leader|teleop|record|train|rollout>
+# Usage: real/so101.sh <ports|cameras|hand-probe|follow|calibrate-follower|calibrate-leader|teleop|record|train|rollout>
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -16,6 +16,11 @@ case "${STEP}" in
   ports) exec "${BIN}/lerobot-find-port" ;;
   cameras) exec "${BIN}/lerobot-find-cameras" opencv --output-dir out/real/camera_check ;;
   hand-probe) shift; exec "${BIN}/python" real/hand_probe.py "$@" ;;
+  follow)
+    shift
+    # a dry run never touches the arm, so it needs no config.env
+    case " $* " in *" --dry-run "*) exec "${BIN}/python" real/follow.py "$@" ;; esac
+    ;;
 esac
 
 if [ ! -f real/config.env ]; then
@@ -31,6 +36,7 @@ CAMERAS="--robot.cameras={wrist: {type: opencv, index_or_path: ${WRIST_CAMERA}, 
 case "${STEP}" in
   calibrate-follower) exec "${BIN}/lerobot-calibrate" "${ROBOT[@]}" ;;
   calibrate-leader) exec "${BIN}/lerobot-calibrate" "${TELEOP[@]}" ;;
+  follow) exec env "WRIST_CAMERA=${WRIST_CAMERA}" "${BIN}/python" real/follow.py --follower-port "${FOLLOWER_PORT}" "$@" ;;
   teleop) exec "${BIN}/lerobot-teleoperate" "${ROBOT[@]}" "${CAMERAS}" "${TELEOP[@]}" "--display_data=${DISPLAY_DATA}" ;;
   record)
     RESUME=false
