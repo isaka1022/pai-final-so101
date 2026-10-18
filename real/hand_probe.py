@@ -17,18 +17,19 @@ FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 CAMERA_FPS = 30
 FPS_WINDOW = 30
+VIEW_JPEG_QUALITY = 80
 
 
 def log_view(rr, frame_rgb: np.ndarray, hand: Hand | None) -> None:
     height, width = frame_rgb.shape[:2]
-    rr.log("camera", rr.Image(frame_rgb))
+    rr.log("camera", rr.Image(frame_rgb).compress(jpeg_quality=VIEW_JPEG_QUALITY))
     if hand is None:
-        rr.log("hand/landmarks", rr.Clear(recursive=False))
-        rr.log("hand/center", rr.Clear(recursive=False))
+        rr.log("camera/hand/landmarks", rr.Clear(recursive=False))
+        rr.log("camera/hand/center", rr.Clear(recursive=False))
         return
-    rr.log("hand/landmarks", rr.Points2D(hand.landmarks_px, radii=3, colors=[0, 255, 0]))
+    rr.log("camera/hand/landmarks", rr.Points2D(hand.landmarks_px, radii=3, colors=[0, 255, 0]))
     center = [(hand.x + 0.5) * width, (hand.y + 0.5) * height]
-    rr.log("hand/center", rr.Points2D([center], radii=8, colors=[255, 0, 0]))
+    rr.log("camera/hand/center", rr.Points2D([center], radii=8, colors=[255, 0, 0]))
 
 
 def describe(hand: Hand | None, fps: float) -> str:
