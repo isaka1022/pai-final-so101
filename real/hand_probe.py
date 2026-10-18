@@ -8,28 +8,15 @@ import time
 from pathlib import Path
 
 import cv2
-import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hand import Hand, HandDetector  # noqa: E402
+from view import log_camera, start_viewer  # noqa: E402
 
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 CAMERA_FPS = 30
 FPS_WINDOW = 30
-VIEW_JPEG_QUALITY = 80
-
-
-def log_view(rr, frame_rgb: np.ndarray, hand: Hand | None) -> None:
-    height, width = frame_rgb.shape[:2]
-    rr.log("camera", rr.Image(frame_rgb).compress(jpeg_quality=VIEW_JPEG_QUALITY))
-    if hand is None:
-        rr.log("camera/hand/landmarks", rr.Clear(recursive=False))
-        rr.log("camera/hand/center", rr.Clear(recursive=False))
-        return
-    rr.log("camera/hand/landmarks", rr.Points2D(hand.landmarks_px, radii=3, colors=[0, 255, 0]))
-    center = [(hand.x + 0.5) * width, (hand.y + 0.5) * height]
-    rr.log("camera/hand/center", rr.Points2D([center], radii=8, colors=[255, 0, 0]))
 
 
 def describe(hand: Hand | None, fps: float) -> str:
@@ -57,11 +44,7 @@ def run_camera(args: argparse.Namespace, detector: HandDetector) -> int:
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
     cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
 
-    rr = None
-    if not args.no_view:
-        import rerun as rr
-
-        rr.init("hand_probe", spawn=True)
+    rr = None if args.no_view else start_viewer("hand_probe")
 
     frames = detected = 0
     sizes: list[float] = []
@@ -83,7 +66,7 @@ def run_camera(args: argparse.Namespace, detector: HandDetector) -> int:
                 detected += 1
                 sizes.append(hand.size)
             if rr is not None:
-                log_view(rr, rgb, hand)
+                log_camera(rr, rgb, hand)
             print(f"\r{describe(hand, fps)}\033[K", end="", flush=True)
     except KeyboardInterrupt:
         pass

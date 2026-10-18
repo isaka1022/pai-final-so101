@@ -12,6 +12,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hand import Hand  # noqa: E402
+from view import log_camera, start_viewer  # noqa: E402
 
 PAN_KEY = "shoulder_pan.pos"
 FLEX_KEY = "wrist_flex.pos"
@@ -32,7 +33,6 @@ FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 CAMERA_FPS = 30
 FPS_WINDOW = 30
-VIEW_JPEG_QUALITY = 80
 WRIST_CAMERA_NAME = "wrist"
 DRY_RUN_START_POSE = 0.0
 
@@ -75,15 +75,7 @@ class FollowController:
 
 
 def log_view(rr, frame_rgb: np.ndarray, hand: Hand | None, target: dict[str, float]) -> None:
-    height, width = frame_rgb.shape[:2]
-    rr.log("camera", rr.Image(frame_rgb).compress(jpeg_quality=VIEW_JPEG_QUALITY))
-    if hand is None:
-        rr.log("camera/hand/landmarks", rr.Clear(recursive=False))
-        rr.log("camera/hand/center", rr.Clear(recursive=False))
-    else:
-        rr.log("camera/hand/landmarks", rr.Points2D(hand.landmarks_px, radii=3, colors=[0, 255, 0]))
-        center = [(hand.x + 0.5) * width, (hand.y + 0.5) * height]
-        rr.log("camera/hand/center", rr.Points2D([center], radii=8, colors=[255, 0, 0]))
+    log_camera(rr, frame_rgb, hand)
     rr.log("target/shoulder_pan", rr.Scalars(target[PAN_KEY]))
     rr.log("target/wrist_flex", rr.Scalars(target[FLEX_KEY]))
 
@@ -130,11 +122,7 @@ def run(args: argparse.Namespace) -> int:
     else:
         robot = connect_robot(args.follower_port, args.camera)
 
-    rr = None
-    if not args.no_view:
-        import rerun as rr
-
-        rr.init("follow", spawn=True)
+    rr = None if args.no_view else start_viewer("follow")
 
     detector = HandDetector()
     controller = FollowController()
