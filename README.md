@@ -57,7 +57,7 @@ uv pip install -e ".[learned]"                                                # 
 
 ## 実機（SO-101）
 
-実機用は sim 用と別の環境に入れる（lerobot と MediaPipe が OpenCV の別版を要求するため、`real/overrides.txt` で lerobot 側に揃える）。
+**実機につないだ検証はしていない**（`hand-probe` を内蔵カメラで動かしたのと、`follow --dry-run` まで）。実機用は sim 用と別の環境に入れる（lerobot と MediaPipe が OpenCV の別版を要求するため、`real/overrides.txt` で lerobot 側に揃える）。
 
 ```bash
 uv venv .venv-real --python 3.12
